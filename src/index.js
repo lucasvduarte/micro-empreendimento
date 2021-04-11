@@ -4,8 +4,7 @@ const connectDB = require("./datebase/bd");
 
 connectDB();
 
-const router = require("./controllers/authController");
-
+const router = require("./routes/routes");
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
