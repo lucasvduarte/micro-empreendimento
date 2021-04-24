@@ -47,6 +47,8 @@ router.post("/autenticacao", async (req, res) => {
     jwt.sign({ token: user._id }, TOKEN_SECRET, (err, token) => {
         return res.send({
             success: true,
+            name: user.name,
+            _id: user._id,
             token,
         });
     });
