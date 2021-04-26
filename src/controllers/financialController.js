@@ -28,10 +28,10 @@ router.get("/", async (req, res) => {
         const products = await Product.find(query);
         const sale = await Sale.find(query);
         let valueProducts = 0;
-        products.map((el) => valueProducts += el.value);
+        products.map((el) => valueProducts += Number(el.value) * Number(el.qtd));
 
         let valueSale = 0;
-        sale.map((el) => valueSale += el.value);
+        sale.map((el) => valueSale += Number(el.value) * Number(el.qtd));
         const lucro = ((valueSale / valueProducts) - 1) * 100;
         return res.send({
             totalProducts: products.length,
