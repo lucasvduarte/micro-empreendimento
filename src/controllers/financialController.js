@@ -28,15 +28,25 @@ router.get("/", async (req, res) => {
         const products = await Product.find(query);
         const sale = await Sale.find(query);
         let valueProducts = 0;
-        products.map((el) => valueProducts += Number(el.value) * Number(el.qtd));
+        let qtdProducts = 0;
+        products.map((el) => {
+            qtdProducts += Number(el.qtd);
+            valueProducts += Number(el.value) * Number(el.qtd);
+            return el;
+        });
 
         let valueSale = 0;
-        sale.map((el) => valueSale += Number(el.value) * Number(el.qtd));
+        let qtdSale = 0;
+        sale.map((el) => {
+            qtdSale += Number(el.qtd);
+            valueSale += Number(el.value) * Number(el.qtd);
+            return el;
+        });
         const lucro = ((valueSale / valueProducts) - 1) * 100;
         return res.send({
-            totalProducts: products.length,
+            totalProducts: qtdProducts,
             valueProducts,
-            totalSale: sale.length,
+            totalSale: qtdSale,
             valueSale,
             lucro: lucro || 0,
         })
