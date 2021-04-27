@@ -10,7 +10,7 @@ router.use(authMiddleware);
 router.get("/", async (req, res) => {
     try {
         const query = { user: req.userId };
-        const sales = await Sale.find(query).populate('user');
+        const sales = await Sale.find(query).populate('user').populate('product');
         return res.send(sales.reverse())
     } catch (error) {
         return res.status(400).send({ error: 'Erro ao consultar vendas' });
@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
     try {
         const query = { user: req.userId, _id: req.params.id };
-        const sale = await Sale.findOne(query).populate('user');
+        const sale = await Sale.findOne(query).populate('user').populate('product');
         return res.send(sale)
     } catch (error) {
         return res.status(400).send({ error: 'Erro ao consultar venda' });
@@ -29,18 +29,18 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        const { name, qtd } = req.body;
-        const query = { user: req.userId, name: name };
-        const product = await Product.findOne(query);
+        const { product, qtd } = req.body;
+        const query = { user: req.userId, _id: product._id };
+        const productAux = await Product.findOne(query);
 
-        if ((product.qtd - Number(qtd)) < 0) {
+        if ((productAux.qtd - Number(qtd)) < 0) {
             return res.status(400).send({ error: 'Quantidade insuficiente para realizar venda' });
         }
 
         const newSale = await Sale.create({ ...req.body, user: req.userId });
 
-        await Product.findByIdAndUpdate(product._id, {
-            qtd: product.qtd - qtd,
+        await Product.findByIdAndUpdate(productAux._id, {
+            qtd: productAux.qtd - qtd,
         }, { new: true });
 
         return res.send(newSale);
@@ -52,24 +52,24 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
     try {
-        const { name, qtd, value } = req.body;
-        const query = { user: req.userId, name: name };
-        const product = await Product.findOne(query);
+        const { product, qtd, value } = req.body;
+        const query = { user: req.userId, _id: product._id };
+        const productAux = await Product.findOne(query);
         const querySale = { user: req.userId, _id: req.params.id };
         const sale = await Sale.findOne(querySale);
 
-        if ((product.qtd - (Number(qtd) - sale.qtd)) < 0) {
+        if ((productAux.qtd - (Number(qtd) - sale.qtd)) < 0) {
             return res.status(400).send({ error: 'Quantidade insuficiente para realizar a quantidade de venda' });
         }
 
         const newSale = await Sale.findByIdAndUpdate(sale._id, {
-            name,
+            product,
             value,
             qtd,
         }, { new: true });
 
-        await Product.findByIdAndUpdate(product._id, {
-            qtd: product.qtd + (sale.qtd - qtd),
+        await Product.findByIdAndUpdate(productAux._id, {
+            qtd: productAux.qtd + (sale.qtd - qtd),
         }, { new: true });
 
         return res.send(newSale);
@@ -83,7 +83,7 @@ router.delete("/:id", async (req, res) => {
     try {
         const querySale = { user: req.userId, _id: req.params.id };
         const sale = await Sale.findOne(querySale);
-        const query = { user: req.userId, name: sale.name };
+        const query = { user: req.userId, _id: sale.product._id };
         const product = await Product.findOne(query);
 
         if (product) {

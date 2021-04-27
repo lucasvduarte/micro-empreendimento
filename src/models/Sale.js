@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const SaleSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        lowercase: true,
+    product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Produtc',
         required: true
     },
     value: {

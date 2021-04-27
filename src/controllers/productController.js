@@ -1,6 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/auth');
 const Product = require('../models/Product');
+const Sale = require('../models/Sale');
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.get("/:id", async (req, res) => {
     try {
         const query = { user: req.userId, _id: req.params.id };
         const product = await Product.findOne(query).populate('user');
+        product.value = product.value.toFixed(2);
         return res.send(product)
     } catch (error) {
         return res.status(400).send({ error: 'Erro ao consultar produto' });
@@ -41,7 +43,14 @@ router.put("/:id", async (req, res) => {
         const { name, value, qtd } = req.body;
         const query = { user: req.userId, _id: req.params.id };
         const productFind = await Product.findOne(query);
+        const querySale = { user: req.userId, product: req.params.id };
+        const sale = await Sale.findOne(querySale);
 
+        if (sale) {
+            await Sale.findByIdAndUpdate(sale._id, {
+                name,
+            }, { new: true });
+        }
         const product = await Product.findByIdAndUpdate(productFind._id, {
             name,
             value,
